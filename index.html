@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Boo Code</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/python/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/clike/clike.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/r/r.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/java/java.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/dracula.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+    :root {
+      --background-color: #0d1b2a;
+      --text-color: #e0e1dd;
+      --accent-color: #00d9ff;
+      --secondary-color: #ff0066;
+      --glow: 0 0 15px var(--accent-color);
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--background-color);
+      color: var(--text-color);
+      font-family: 'Orbitron', sans-serif;
+      overflow-x: hidden;
+    }
+    header {
+      background: #0d1b2a;
+      padding: 15px;
+      text-align: center;
+      font-size: 28px;
+      letter-spacing: 2px;
+      color: var(--accent-color);
+      text-shadow: 0 0 10px var(--accent-color);
+    }
+    .container {
+      display: flex;
+      min-height: calc(100vh - 100px);
+      padding: 20px;
+      gap: 20px;
+    }
+    .editor-container, .output-container {
+      flex: 1;
+      background: rgba(27, 38, 59, 0.9);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: var(--glow);
+      transition: all 0.3s ease;
+    }
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+      }
+      .editor-container, .output-container {
+        width: 100%;
+      }
+    }
+    .CodeMirror {
+      height: 60vh;
+      border: 1px solid var(--accent-color);
+      border-radius: 5px;
+      box-shadow: inset 0 0 5px var(--accent-color);
+    }
+    #output {
+      background: rgba(14, 20, 31, 0.95);
+      padding: 15px;
+      min-height: 50px;
+      border-radius: 10px;
+      font-family: 'Courier New', monospace;
+      color: #00ffcc;
+      white-space: pre-wrap;
+      overflow-y: auto;
+      height: 60vh;
+      position: relative;
+    }
+    #interactive-input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 10px;
+      background: var(--background-color);
+      color: var(--text-color);
+      border: 1px solid var(--secondary-color);
+      border-radius: 5px;
+      display: none;
+    }
+    select, textarea, button, input {
+      background: var(--background-color);
+      color: var(--text-color);
+      border: 1px solid var(--accent-color);
+      border-radius: 5px;
+      padding: 8px;
+      margin: 5px 0;
+      font-family: 'Orbitron', sans-serif;
+      transition: all 0.3s ease;
+    }
+    button {
+      cursor: pointer;
+      background: var(--accent-color);
+      color: var(--background-color);
+    }
+    button:hover {
+      box-shadow: var(--glow);
+      transform: scale(1.05);
+    }
+    .rocket {
+      font-size: 50px;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      animation: pulse 1.5s infinite;
+      color: var(--secondary-color);
+    }
+    @keyframes pulse {
+      0% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
+      50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+      100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
+    }
+    .hidden { display: none; }
+    footer {
+      background: #0d1b2a;
+      padding: 10px;
+      text-align: center;
+      font-size: 14px;
+      color: #778da9;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+    }
+    .social-icons a {
+      margin: 0 15px;
+      transition: transform 0.3s ease;
+    }
+    .social-icons a:hover {
+      transform: scale(1.2);
+    }
+  </style>
+</head>
+<body>
+  <header>Boo Code</header>
+  <div class="container">
+    <div class="editor-container">
+      <select id="language">
+        <option value="python">Python</option>
+        <option value="java">Java</option>
+        <option value="c">C</option>
+        <option value="cpp">C++</option>
+        <option value="r" selected>R</option>
+      </select>
+      <div id="code-editor"></div>
+      <textarea id="stdin" placeholder="Input (stdin) - Provide initial input here."></textarea>
+      <button id="run" class="hidden">Run Code</button>
+      <button id="clear">Clear Output</button>
+      <div id="rocket" class="rocket hidden">🚀</div>
+    </div>
+    <div class="output-container">
+      <div id="output">Output:</div>
+      <input id="interactive-input" placeholder="Enter input here when prompted...">
+    </div>
+  </div>
+  <footer>
+    <p>Product of GARI TECH - GROWTH LAB</p>
+    <div class="social-icons">
+      <a href="https://www.instagram.com/dreamsofbooo" target="_blank"><img src="https://img.icons8.com/ios-filled/50/00d9ff/instagram-new.png" alt="Instagram" width="30"></a>
+      <a href="https://www.linkedin.com/in/boobesh2912" target="_blank"><img src="https://img.icons8.com/ios-filled/50/00d9ff/linkedin.png" alt="LinkedIn" width="30"></a>
+      <a href="https://github.com/boobesh2912" target="_blank"><img src="https://img.icons8.com/ios-filled/50/00d9ff/github.png" alt="GitHub" width="30"></a>
+      <a href="https://www.boo.tech.garitech.in" target="_blank"><img src="https://img.icons8.com/ios-filled/50/00d9ff/domain.png" alt="Website" width="30"></a>
+    </div>
+  </footer>
+
+  <script>
+    const languageMap = {
+      python: { id: 71, mode: 'python' },
+      java: { id: 62, mode: 'java' },
+      c: { id: 50, mode: 'clike' },
+      cpp: { id: 54, mode: 'clike' },
+      r: { id: 80, mode: 'r' },
+    };
+
+    const sampleCodes = {
+      python: 'print("Hello, World!")',
+      java: 'public class Main {\n    public static void main(String[] args) {\n        System.out.println("Hello, World!");\n    }\n}',
+      c: '#include <stdio.h>\nint main() {\n    printf("Hello, World!\\n");\n    return 0;\n}',
+      cpp: '#include <iostream>\nint main() {\n    std::cout << "Hello, World!" << std::endl;\n    return 0;\n}',
+      r: 'print("Hello, World!")\nlibrary(dplyr)\n\ninventory <- data.frame(\n  Item = c("Item4", "Item5", "Item1", "Item2", "Item6", "Item3"),\n  Qty = c(200, 500, 100, 50, 40, 30),\n  Unit_Price = c(25, 10, 20, 40, 50, 15)\n)\n\ninventory <- inventory %>%\n  mutate(Total_Value = Qty * Unit_Price) %>%\n  arrange(desc(Total_Value)) %>%\n  mutate(\n    Cumulative_Value = cumsum(Total_Value),\n    Cumulative_Perc = Cumulative_Value / sum(Total_Value) * 100\n  ) %>%\n  mutate(Category = case_when(\n    Cumulative_Perc <= 80 ~ "A",\n    Cumulative_Perc <= 95 ~ "B",\n    TRUE ~ "C"\n  ))\n\nprint(inventory)',
+    };
+
+    const editor = CodeMirror(document.getElementById('code-editor'), {
+      value: sampleCodes.r,
+      lineNumbers: true,
+      mode: 'r',
+      theme: 'dracula',
+      lineWrapping: true,
+      viewportMargin: Infinity,
+    });
+
+    let awaitingInput = false;
+    let currentToken = null;
+
+    document.getElementById('language').addEventListener('change', function() {
+      const lang = this.value;
+      editor.setOption('mode', languageMap[lang].mode);
+      editor.setValue(sampleCodes[lang]);
+    });
+
+    document.getElementById('run').addEventListener('click', async function() {
+      this.disabled = true;
+      document.getElementById('rocket').classList.remove('hidden');
+      document.getElementById('output').textContent = 'Output: Running...';
+      document.getElementById('interactive-input').style.display = 'none';
+      const lang = document.getElementById('language').value;
+      const code = editor.getValue();
+      const stdin = document.getElementById('stdin').value;
+
+      try {
+        const response = await fetch('https://judge0-ce.p.rapidapi.com/submissions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-RapidAPI-Key': '0142d4a357msh15c6b0fbd87752ep186e33jsn3ea3cd2b7d56',
+            'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com',
+          },
+          body: JSON.stringify({
+            source_code: code,
+            language_id: languageMap[lang].id,
+            stdin: stdin,
+          }),
+        });
+        const data = await response.json();
+        if (data.token) {
+          currentToken = data.token;
+          pollSubmission(currentToken);
+        } else {
+          document.getElementById('output').textContent = 'Error: Failed to get submission token';
+          resetUI();
+        }
+      } catch (error) {
+        document.getElementById('output').textContent = 'Error: ' + error.message;
+        resetUI();
+      }
+    });
+
+    function pollSubmission(token) {
+      const interval = setInterval(async () => {
+        try {
+          const response = await fetch(`https://judge0-ce.p.rapidapi.com/submissions/${token}`, {
+            headers: {
+              'X-RapidAPI-Key': '0142d4a357msh15c6b0fbd87752ep186e33jsn3ea3cd2b7d56',
+              'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com',
+            },
+          });
+          const data = await response.json();
+          if (data.status && data.status.id) {
+            if (data.status.id >= 3) {
+              clearInterval(interval);
+              const outputText = data.stdout || data.stderr || data.compile_output || 'No output';
+              if (outputText.includes('input') || outputText.includes('scanf') || outputText.includes('readline')) {
+                document.getElementById('output').textContent = outputText + '\nAwaiting input...';
+                document.getElementById('interactive-input').style.display = 'block';
+                awaitingInput = true;
+              } else {
+                document.getElementById('output').textContent = outputText;
+                resetUI();
+              }
+            }
+          } else {
+            clearInterval(interval);
+            document.getElementById('output').textContent = 'Error: Invalid or missing status in API response';
+            resetUI();
+          }
+        } catch (error) {
+          clearInterval(interval);
+          document.getElementById('output').textContent = 'Error: ' + error.message;
+          resetUI();
+        }
+      }, 2000);
+    }
+
+    document.getElementById('interactive-input').addEventListener('keypress', async function(e) {
+      if (e.key === 'Enter' && awaitingInput) {
+        const additionalInput = this.value;
+        this.value = '';
+        this.style.display = 'none';
+        awaitingInput = false;
+        const lang = document.getElementById('language').value;
+        const code = editor.getValue();
+        const stdin = document.getElementById('stdin').value + '\n' + additionalInput;
+
+        try {
+          const response = await fetch('https://judge0-ce.p.rapidapi.com/submissions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-RapidAPI-Key': '0142d4a357msh15c6b0fbd87752ep186e33jsn3ea3cd2b7d56',
+              'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com',
+            },
+            body: JSON.stringify({
+              source_code: code,
+              language_id: languageMap[lang].id,
+              stdin: stdin,
+            }),
+          });
+          const data = await response.json();
+          if (data.token) {
+            currentToken = data.token;
+            pollSubmission(currentToken);
+          } else {
+            document.getElementById('output').textContent = 'Error: Failed to get submission token';
+            resetUI();
+          }
+        } catch (error) {
+          document.getElementById('output').textContent = 'Error: ' + error.message;
+          resetUI();
+        }
+      }
+    });
+
+    document.getElementById('clear').addEventListener('click', function() {
+      document.getElementById('output').textContent = 'Output:';
+      document.getElementById('interactive-input').style.display = 'none';
+      awaitingInput = false;
+    });
+
+    function resetUI() {
+      document.getElementById('run').disabled = false;
+      document.getElementById('rocket').classList.add('hidden');
+    }
+
+    editor.setOption('extraKeys', {
+      'Ctrl-Enter': function() {
+        document.getElementById('run').click();
+      }
+    });
+
+    // Conditional Run Code Button Visibility
+    const percentage = 80; // Set to 80% as per your requirement
+    if (percentage === 80) {
+      document.getElementById('run').classList.remove('hidden');
+    } else {
+      document.getElementById('run').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>
